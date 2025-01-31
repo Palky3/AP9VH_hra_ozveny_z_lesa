@@ -14,6 +14,9 @@ public class FootstepManager : MonoBehaviour
     private AudioSource audioSource;
     private TerrainDetector terrainDetector;
 
+    private float stepCooldown = 0.2f; // Èas mezi kroky
+    private float nextStepTime = 0f; // Èas, kdy se mùže pøehrát další krok
+
     private void Awake()
     {
         audioSource = GetComponent<AudioSource>();
@@ -22,8 +25,12 @@ public class FootstepManager : MonoBehaviour
 
     public void PlayStep()
     {
-        AudioClip clip = GetRandomClip();
-        audioSource.PlayOneShot(clip);
+        if (Time.time >= nextStepTime)
+        {
+            nextStepTime = Time.time + stepCooldown;
+            AudioClip clip = GetRandomClip();
+            audioSource.PlayOneShot(clip);
+        }
     }
 
     private AudioClip GetRandomClip()

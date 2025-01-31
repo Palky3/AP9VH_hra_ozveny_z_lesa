@@ -17,14 +17,31 @@ public class Enemy : MonoBehaviour
     [SerializeField] float aggroRange = 4f;
     [SerializeField] GameObject spawnNPC;
     [SerializeField] GameManager gameManager;
+    [SerializeField] GameObject enemyDealer;
+    [SerializeField] GameObject bossPelvisCapsuleCollider;
 
+    [Header("Patroling")]
+    [SerializeField] Transform[] patrolPoints;
+    [SerializeField] float patrolWaitTime = 2f;
 
+    [Header("Audio")]
+    [SerializeField] AudioClip[] hitSounds;
+    [SerializeField] AudioClip[] takeHitSounds;
+    [SerializeField] AudioClip deathSound;
+    [SerializeField] AudioClip weaponSound;
+
+    AudioSource audioSource;
     GameObject player;
     NavMeshAgent agent;
     Animator animator;
     Character playerCharacter;
+    CapsuleCollider capsuleCollider;
     float timePassed;
     float newDestinationCD = 0.5f;
+    bool isDead = false;
+    //bool isPatrolling = true; // Sleduje, zda se nepøítel patroluje
+    int currentPatrolIndex = 0; // Aktuální bod patrolování
+    float waitTime;
 
     void Start()
     {
@@ -32,57 +49,101 @@ public class Enemy : MonoBehaviour
         animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player");
         playerCharacter = player.GetComponent<Character>();
+        capsuleCollider = GetComponent<CapsuleCollider>();
+        audioSource = GetComponent<AudioSource>();
+
+        if (patrolPoints.Length > 0)
+        {
+            agent.SetDestination(patrolPoints[currentPatrolIndex].position);
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (playerCharacter.isDead || isDead)
+        {
+            return;
+        }
+
         animator.SetFloat("speed", agent.velocity.magnitude / agent.speed);
 
-		if (playerCharacter.isDead)
-		{
-            return;
-		}  
-
-        if (timePassed >= attackCD)
+        if (Vector3.Distance(player.transform.position, transform.position) <= aggroRange)
         {
-            if (Vector3.Distance(player.transform.position, transform.position) <= attackRange)
+            ChasePlayer();
+        }
+        else
+        {
+            Patrol();
+        }
+    }
+
+    void Patrol()
+    {
+        if (patrolPoints.Length == 0) return;
+
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+        {
+            if (waitTime <= 0)
+            {
+                // Posuò na další bod patrolování
+                currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
+                agent.SetDestination(patrolPoints[currentPatrolIndex].position);
+                waitTime = patrolWaitTime;
+            }
+            else
+            {
+                waitTime -= Time.deltaTime;
+            }
+        }
+    }
+
+    void ChasePlayer()
+    {
+        if (Vector3.Distance(player.transform.position, transform.position) <= attackRange)
+        {
+            if (timePassed >= attackCD)
             {
                 animator.SetTrigger("attack");
                 timePassed = 0;
             }
         }
-        timePassed += Time.deltaTime;
-
-        if (newDestinationCD <= 0 && Vector3.Distance(player.transform.position, transform.position) <= aggroRange)
+        else
         {
-            newDestinationCD = 0.5f;
             agent.SetDestination(player.transform.position);
         }
-        newDestinationCD -= Time.deltaTime;
+
+        timePassed += Time.deltaTime;
         transform.LookAt(player.transform);
     }
 
-	/*private void OnCollisionEnter(Collision collision)
-	{
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            print(true);
-            player = collision.gameObject;
-        }
-    }*/
-
-	void Die()
+    void Die()
     {
         //Instantiate(ragdoll, transform.position,transform.rotation);
-        print(this.gameObject.tag);
+        //print(this.gameObject.tag);
         if (string.Equals(this.gameObject.tag, "Boss"))
         {
             spawnNPC.SetActive(true);
             gameManager.showVictoryText();
+            gameManager.ChangeQuestText();
 
-        }           
-        Destroy(this.gameObject);
+            CapsuleCollider[] colliders = GetComponentsInChildren<CapsuleCollider>();
+            foreach (CapsuleCollider col in colliders)
+            {
+                col.enabled = false;
+            }
+
+        }
+        //Destroy(this.gameObject);
+        if (deathSound != null)
+            audioSource.PlayOneShot(deathSound, 0.5f);
+        
+        animator.SetBool("death", true);
+        capsuleCollider.enabled = false;
+        agent.enabled = false;
+
+        isDead = true;
+        
     }
 
     public void TakeDamage(float damageAmount)
@@ -90,6 +151,18 @@ public class Enemy : MonoBehaviour
         health -= damageAmount;
         animator.SetTrigger("damage");
         //CameraShake.Instance.ShakeCamera(2f, 0.2f);
+
+        if (takeHitSounds.Length > 0 && audioSource != null)
+        {
+            AudioClip clip = takeHitSounds[Random.Range(0, takeHitSounds.Length)];
+            audioSource.PlayOneShot(clip, 0.5f);
+        }
+
+        if (hitSounds.Length > 0 && audioSource != null)
+        {
+            AudioClip clip = hitSounds[Random.Range(0, hitSounds.Length)];
+            audioSource.PlayOneShot(clip, 0.5f);
+        }
 
         if (health <= 0)
         {
@@ -99,10 +172,13 @@ public class Enemy : MonoBehaviour
    public void StartDealDamage()
     {
         GetComponentInChildren<EnemyDamageDealer>().StartDealDamage();
+        enemyDealer.GetComponent<EnemyDamageDealer>().StartDealDamage();
+
     }
     public void EndDealDamage()
     {
         GetComponentInChildren<EnemyDamageDealer>().EndDealDamage();
+        enemyDealer.GetComponent<EnemyDamageDealer>().EndDealDamage();
     }
 
     /*public void HitVFX(Vector3 hitPosition)
@@ -117,6 +193,21 @@ public class Enemy : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, attackRange);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, aggroRange);
+
+        if (patrolPoints != null && patrolPoints.Length > 0)
+        {
+            Gizmos.color = Color.blue;
+            foreach (var point in patrolPoints)
+            {
+                Gizmos.DrawSphere(point.position, 0.2f);
+            }
+        }
+
+    }
+
+    public void PlaySwordSound()
+    {
+        audioSource.PlayOneShot(weaponSound, 0.5f);
     }
 
 }

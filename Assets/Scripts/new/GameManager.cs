@@ -1,13 +1,16 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
     [SerializeField] GameObject pauseMenu;
-
     [SerializeField] TextMeshProUGUI congratulationText;
+    [SerializeField] TextMeshProUGUI questText;
+    [SerializeField] GameObject healthBar;
 
     public static bool isPaused = false;
 
@@ -21,6 +24,18 @@ public class GameManager : MonoBehaviour
         Cursor.visible = false;
 
         congratulationText.enabled = false;
+
+        questText.enabled = false;
+        healthBar.gameObject.SetActive(false);
+
+        StartCoroutine(WaitForCutsceneEnd());
+    }
+
+    IEnumerator WaitForCutsceneEnd()
+    {
+        yield return new WaitForSeconds(18f);
+        questText.enabled = true;
+        healthBar.gameObject.SetActive(true);
     }
 
     // Update is called once per frame
@@ -68,6 +83,12 @@ public class GameManager : MonoBehaviour
     public void showVictoryText()
     {
         congratulationText.enabled = true;
+        congratulationText.gameObject.SetActive(true);
         congratulationText.CrossFadeAlpha(0f, 6f, false);
+    }
+
+    public void ChangeQuestText()
+    {
+        questText.text = "Mùžeš volnì prozkoumávat, ale nic zajímavého tì už neèeká.";
     }
 }

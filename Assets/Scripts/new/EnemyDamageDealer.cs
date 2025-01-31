@@ -5,7 +5,7 @@ using UnityEngine;
 public class EnemyDamageDealer : MonoBehaviour
 {
     bool canDealDamage;
-    bool hasDealtDamage;
+    static bool hasDealtDamage;
 
     [SerializeField] float weaponLength;
     [SerializeField] int weaponDamage;
@@ -36,8 +36,11 @@ public class EnemyDamageDealer : MonoBehaviour
     }
     public void StartDealDamage()
     {
+        print(hasDealtDamage);
+
         canDealDamage = true;
         hasDealtDamage = false;
+
     }
     public void EndDealDamage()
     {

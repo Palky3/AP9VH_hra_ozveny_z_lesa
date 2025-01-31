@@ -5,10 +5,13 @@ public class AttackState : State
     float clipLength;
     float clipSpeed;
     bool attack;
-    public AttackState(Character _character, StateMachine _stateMachine) : base(_character, _stateMachine)
+    HealthSystem healthSystem;
+    
+    public AttackState(HealthSystem _healthSystem, Character _character, StateMachine _stateMachine) : base(_character, _stateMachine)
     {
         character = _character;
         stateMachine = _stateMachine;
+        healthSystem = _healthSystem;
     }
 
     public override void Enter()
@@ -19,6 +22,7 @@ public class AttackState : State
         character.animator.applyRootMotion = true;
         timePassed = 0f;
         character.animator.SetTrigger("attack");
+        //healthSystem.PlaySwordSound();
         character.animator.SetFloat("speed", 0f);
     }
 

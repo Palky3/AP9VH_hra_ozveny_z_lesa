@@ -9,8 +9,8 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenu.unity
     guid: de4eaa7ed7f8b014cbbb9ad7581e5e52
   - enabled: 1
-    path: Assets/Scenes/Scene Versions/Scene_v4.0_combat_done_interact_npc.unity
-    guid: 1feb2ec499837b44ab4a2d2fc73fa64f
+    path: Assets/Scenes/Scene Versions/Scene_v4.5_placed_enemies.unity
+    guid: 55cb4e8d537dd2b4382840d5c732d242
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

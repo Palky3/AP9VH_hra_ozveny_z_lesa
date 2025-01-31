@@ -51,8 +51,10 @@ public class Character : MonoBehaviour
     public Animator animator;
     [HideInInspector]
     public Vector3 playerVelocity;
+    [HideInInspector]
+    public HealthSystem healthSystem;
 
-    //bool is_introCutscene = true;
+    bool is_introCutscene = true;
 
 
     // Start is called before the first frame update
@@ -61,6 +63,8 @@ public class Character : MonoBehaviour
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
         playerInput = GetComponent<PlayerInput>();
+        healthSystem = GetComponent<HealthSystem>();
+
         cameraTransform = Camera.main.transform;
 
         movementSM = new StateMachine();
@@ -71,27 +75,27 @@ public class Character : MonoBehaviour
         sprinting = new SprintState(this, movementSM);
         sprintjumping = new SprintJumpState(this, movementSM);
         combatting = new CombatState(this, movementSM);
-        attacking = new AttackState(this, movementSM);
+        attacking = new AttackState(healthSystem, this, movementSM);
 
         movementSM.Initialize(standing);
 
         normalColliderHeight = controller.height;
         gravityValue *= gravityMultiplier;
 
-        //StartCoroutine(WaitForCutsceneEnd());
+        StartCoroutine(WaitForCutsceneEnd());
     }
 
     IEnumerator WaitForCutsceneEnd()
     {
         yield return new WaitForSeconds(18f);
-        //is_introCutscene = false;
+        is_introCutscene = false;
         
     }
 
 
     private void Update()
     {
-        if (!isDead && !GameManager.isPaused/* && !is_introCutscene*/)
+        if (!isDead && !GameManager.isPaused && !is_introCutscene)
         {
             movementSM.currentState.HandleInput();
 
@@ -102,7 +106,7 @@ public class Character : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!isDead && !GameManager.isPaused/* && !is_introCutscene*/)
+        if (!isDead && !GameManager.isPaused && !is_introCutscene)
         {
             movementSM.currentState.PhysicsUpdate();
         }

@@ -25,34 +25,18 @@ public class CameraOrbit : MonoBehaviour
 		x = angles.y;
 		y = angles.x;
 
-		//this.enabled = false;
-
-        //StartCoroutine(WaitForCutsceneEnd());
+		this.enabled = false;
+        StartCoroutine(WaitForCutsceneEnd());
     }
 
     IEnumerator WaitForCutsceneEnd()
     {
         yield return new WaitForSeconds(18f);
-
-        // Nastavení počáteční pozice a rotace kamery
-        transform.position = new Vector3(443.09796142578127f, 61.404296875f, 854.634033203125f);
-        transform.rotation = new Quaternion(
-            0.018518030643463136f,
-            -0.9621131420135498f,
-            0.2634866535663605f,
-            0.06760409474372864f
-        );
-
-        // Aktualizace úhlů x a y podle nové rotace
-        Vector3 newAngles = transform.eulerAngles;
-        x = newAngles.y;
-        y = newAngles.x;
-
         this.enabled = true;
-
+		
     }
 
-    void LateUpdate()
+	void LateUpdate()
 	{
 		if (refCamera)
 		{
